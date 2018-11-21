@@ -64,6 +64,7 @@ bool QNode::init() {
   goal_joint_space_path_client_ = n.serviceClient<open_manipulator_msgs::SetJointPosition>("open_manipulator/goal_joint_space_path");
   goal_task_space_path_client_ = n.serviceClient<open_manipulator_msgs::SetKinematicsPose>("open_manipulator/goal_task_space_path");
   goal_tool_control_client_ = n.serviceClient<open_manipulator_msgs::SetJointPosition>("open_manipulator/goal_tool_control");
+  toggle_torque_client_ = n.serviceClient<std_srvs::Trigger>("open_manipulator/toggle_torque");
 
   start();
 	return true;
@@ -144,6 +145,13 @@ bool QNode::setToolControl(std::vector<double> joint_angle)
     return srv.response.isPlanned;
   }
   return false;
+}
+
+std_srvs::Trigger::Response QNode::toggleTorque()
+{
+  std_srvs::Trigger srv;
+  toggle_torque_client_.call(srv);
+  return srv.response;
 }
 
 bool QNode::setTaskSpacePath(std::vector<double> kinematics_pose, double path_time)

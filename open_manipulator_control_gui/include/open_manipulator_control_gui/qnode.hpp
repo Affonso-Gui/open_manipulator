@@ -40,6 +40,7 @@
 
 #include "open_manipulator_msgs/SetJointPosition.h"
 #include "open_manipulator_msgs/SetKinematicsPose.h"
+#include "std_srvs/Trigger.h"
 
 #define NUM_OF_JOINT_AND_TOOL 5
 
@@ -86,6 +87,8 @@ public:
   bool setTaskSpacePath(std::vector<double> kinematics_pose, double path_time);
   bool setToolControl(std::vector<double> joint_angle);
 
+  std_srvs::Trigger::Response toggleTorque();
+
 Q_SIGNALS:
   void rosShutdown();
 
@@ -100,6 +103,7 @@ private:
   ros::ServiceClient goal_joint_space_path_client_;
   ros::ServiceClient goal_task_space_path_client_;
   ros::ServiceClient goal_tool_control_client_;
+  ros::ServiceClient toggle_torque_client_;
 
   std::vector<double> present_joint_angle;
   std::vector<double> present_gripper_angle;

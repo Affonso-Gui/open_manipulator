@@ -106,6 +106,17 @@ void MainWindow::on_btn_timer_start_clicked(void)
   ui.btn_set_gripper->setEnabled(true);
 }
 
+void MainWindow::on_btn_toggle_torque_clicked(void)
+{
+  std_srvs::Trigger::Response res = qnode.toggleTorque();
+  if(!res.success)
+    {
+      writeLog("[ERR!!] Failed to send service");
+      return;
+    }
+  writeLog(res.message.c_str());
+}
+
 void MainWindow::on_btn_init_pose_clicked(void)
 {
   std::vector<std::string> joint_name;

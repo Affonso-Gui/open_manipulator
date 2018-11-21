@@ -52,6 +52,7 @@ public:
 public Q_SLOTS:
   void timerCallback();
   void on_btn_timer_start_clicked(void);
+  void on_btn_toggle_torque_clicked(void);
   void on_btn_init_pose_clicked(void);
   void on_btn_home_pose_clicked(void);
   void on_btn_gripper_open_clicked(void);
