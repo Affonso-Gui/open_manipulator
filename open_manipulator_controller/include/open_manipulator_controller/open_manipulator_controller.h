@@ -27,6 +27,7 @@
 
 #include "open_manipulator_msgs/SetJointPosition.h"
 #include "open_manipulator_msgs/SetKinematicsPose.h"
+#include "std_srvs/Trigger.h"
 
 #include "open_manipulator_libs/Chain.h"
 
@@ -36,6 +37,13 @@
 
 namespace open_manipulator_controller
 {
+
+enum ToolControlFlag
+{
+  NONE = 0,
+  TOOL_MOVE,
+  TOOL_MOVE_TO_PRESENT
+};
 
 class OM_CONTROLLER
 {
@@ -49,6 +57,8 @@ class OM_CONTROLLER
   ros::ServiceServer goal_joint_space_path_to_present_server_;
   ros::ServiceServer goal_task_space_path_to_present_server_;
   ros::ServiceServer goal_tool_control_server_;
+  ros::ServiceServer goal_tool_control_to_present_server_;
+  ros::ServiceServer toggle_torque_server_;
 
   ros::Publisher chain_kinematics_pose_pub_;
   ros::Publisher chain_joint_states_pub_;
@@ -61,7 +71,7 @@ class OM_CONTROLLER
 
   CHAIN chain_;
 
-  bool tool_ctrl_flag_;
+  ToolControlFlag tool_ctrl_flag_;
   bool using_platform_;
   double tool_position_;
   bool timer_thread_flag_;
@@ -86,6 +96,10 @@ class OM_CONTROLLER
                                           open_manipulator_msgs::SetKinematicsPose::Response &res);
   bool goalToolControlCallback(open_manipulator_msgs::SetJointPosition::Request  &req,
                                open_manipulator_msgs::SetJointPosition::Response &res);
+  bool goalToolControlToPresentCallback(open_manipulator_msgs::SetJointPosition::Request  &req,
+                                        open_manipulator_msgs::SetJointPosition::Response &res);
+  bool toggleTorqueCallback(std_srvs::Trigger::Request  &req,
+                            std_srvs::Trigger::Response &res);
 
   void setTimerThread();
   static void *timerThread(void *param);

@@ -23,7 +23,7 @@ using namespace open_manipulator_controller;
 OM_CONTROLLER::OM_CONTROLLER()
     :node_handle_(""),
      priv_node_handle_("~"),
-     tool_ctrl_flag_(false),
+     tool_ctrl_flag_(NONE),
      timer_thread_flag_(false),
      using_platform_(false),
      tool_position_(0.0)
@@ -141,6 +141,8 @@ void OM_CONTROLLER::initSubscriber()
   goal_joint_space_path_to_present_server_ = node_handle_.advertiseService(robot_name_ + "/goal_joint_space_path_to_present", &OM_CONTROLLER::goalJointSpacePathToPresentCallback, this);
   goal_task_space_path_to_present_server_ = node_handle_.advertiseService(robot_name_ + "/goal_task_space_path_to_present", &OM_CONTROLLER::goalTaskSpacePathToPresentCallback, this);
   goal_tool_control_server_ = node_handle_.advertiseService(robot_name_ + "/goal_tool_control", &OM_CONTROLLER::goalToolControlCallback, this);
+  goal_tool_control_to_present_server_ = node_handle_.advertiseService(robot_name_ + "/goal_tool_control_to_present", &OM_CONTROLLER::goalToolControlToPresentCallback, this);
+  toggle_torque_server_ = node_handle_.advertiseService(robot_name_ + "/toggle_torque", &OM_CONTROLLER::toggleTorqueCallback, this);
 }
 
 bool OM_CONTROLLER::goalJointSpacePathCallback(open_manipulator_msgs::SetJointPosition::Request  &req,
@@ -201,9 +203,34 @@ bool OM_CONTROLLER::goalToolControlCallback(open_manipulator_msgs::SetJointPosit
                                             open_manipulator_msgs::SetJointPosition::Response &res)
 {
   tool_position_ = req.joint_position.position.at(0);
-  tool_ctrl_flag_ = true;
+  tool_ctrl_flag_ = TOOL_MOVE;
 
   res.isPlanned = true;
+  return true;
+}
+bool OM_CONTROLLER::goalToolControlToPresentCallback(open_manipulator_msgs::SetJointPosition::Request  &req,
+                                                     open_manipulator_msgs::SetJointPosition::Response &res)
+{
+  tool_position_ = req.joint_position.position.at(0);
+  tool_ctrl_flag_ = TOOL_MOVE_TO_PRESENT;
+
+  res.isPlanned = true;
+  return true;
+}
+bool OM_CONTROLLER::toggleTorqueCallback(std_srvs::Trigger::Request  &req,
+                                         std_srvs::Trigger::Response &res)
+{
+  if(chain_.isEnabled())
+  {
+    chain_.allActuatorDisable();
+    res.message = "Torque Disabled";
+  }
+  else
+  {
+    chain_.allActuatorEnable();
+    res.message = "Torque Enabled";
+  }
+  res.success = true;
   return true;
 }
 
@@ -276,10 +303,16 @@ void OM_CONTROLLER::process(double time)
 {
   chain_.chainProcess(time);
 
-  if(tool_ctrl_flag_)
+  switch(tool_ctrl_flag_)
   {
-    chain_.toolMove(TOOL, tool_position_);
-    tool_ctrl_flag_ = false;
+    case TOOL_MOVE:
+      chain_.toolMove(TOOL, tool_position_);
+      tool_ctrl_flag_ = NONE;
+      break;
+    case TOOL_MOVE_TO_PRESENT:
+      chain_.toolMoveToPresentValue(TOOL, tool_position_);
+      tool_ctrl_flag_ = NONE;
+      break;
   }
 }
 
