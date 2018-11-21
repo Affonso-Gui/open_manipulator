@@ -7,6 +7,7 @@
 #include <termios.h>
 #include "open_manipulator_msgs/SetJointPosition.h"
 #include "open_manipulator_msgs/SetKinematicsPose.h"
+#include "std_srvs/Trigger.h"
 
 #define NUM_OF_JOINT 4
 #define DELTA 0.01
@@ -26,7 +27,9 @@ class OM_TELEOP
   ros::ServiceClient goal_joint_space_path_to_present_client_;
   ros::ServiceClient goal_task_space_path_to_present_client_;
   ros::ServiceClient goal_joint_space_path_client_;
+  ros::ServiceClient goal_tool_control_to_present_client_;
   ros::ServiceClient goal_tool_control_client_;
+  ros::ServiceClient toggle_torque_client_;
 
   ros::Subscriber chain_joint_states_sub_;
   ros::Subscriber chain_kinematics_pose_sub_;
@@ -54,7 +57,9 @@ class OM_TELEOP
   bool setJointSpacePathToPresent(std::vector<std::string> joint_name, std::vector<double> joint_angle, double path_time);
   bool setJointSpacePath(std::vector<std::string> joint_name, std::vector<double> joint_angle, double path_time);
   bool setTaskSpacePathToPresent(std::vector<double> kinematics_pose, double path_time);
+  bool setToolControlToPresent(std::vector<double> joint_angle);
   bool setToolControl(std::vector<double> joint_angle);
+  bool toggleTorque();
 
   void printText();
   void setGoal(char ch);

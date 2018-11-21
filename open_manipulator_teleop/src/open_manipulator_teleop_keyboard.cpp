@@ -48,7 +48,9 @@ void OM_TELEOP::initPublisher()
   goal_joint_space_path_to_present_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>(robot_name_ + "/goal_joint_space_path_to_present");
   goal_task_space_path_to_present_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetKinematicsPose>(robot_name_ + "/goal_task_space_path_to_present");
   goal_joint_space_path_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>(robot_name_ + "/goal_joint_space_path");
+  goal_tool_control_to_present_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>(robot_name_ + "/goal_tool_control_to_present");
   goal_tool_control_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>(robot_name_ + "/goal_tool_control");
+  toggle_torque_client_ = node_handle_.serviceClient<std_srvs::Trigger>(robot_name_ + "/toggle_torque");
 
 }
 void OM_TELEOP::initSubscriber()
@@ -118,6 +120,18 @@ bool OM_TELEOP::setJointSpacePath(std::vector<std::string> joint_name, std::vect
   return false;
 }
 
+bool OM_TELEOP::setToolControlToPresent(std::vector<double> joint_angle)
+{
+  open_manipulator_msgs::SetJointPosition srv;
+  srv.request.joint_position.position = joint_angle;
+
+  if(goal_tool_control_to_present_client_.call(srv))
+  {
+    return srv.response.isPlanned;
+  }
+  return false;
+}
+
 bool OM_TELEOP::setToolControl(std::vector<double> joint_angle)
 {
   open_manipulator_msgs::SetJointPosition srv;
@@ -141,6 +155,16 @@ bool OM_TELEOP::setTaskSpacePathToPresent(std::vector<double> kinematics_pose, d
   if(goal_task_space_path_to_present_client_.call(srv))
   {
     return srv.response.isPlanned;
+  }
+  return false;
+}
+
+bool OM_TELEOP::toggleTorque()
+{
+  std_srvs::Trigger srv;
+  if(toggle_torque_client_.call(srv))
+  {
+    return srv.response.success;
   }
   return false;
 }
@@ -169,6 +193,10 @@ void OM_TELEOP::printText()
   printf("\n");
   printf("g : gripper open\n");
   printf("f : gripper close\n");
+  printf("b : increase gripper distance\n");
+  printf("v : decrease gripper distance\n");
+  printf("\n");
+  printf("t : toggle torque\n");
   printf("       \n");
   printf("1 : init pose\n");
   printf("2 : home pose\n");
@@ -329,7 +357,26 @@ void OM_TELEOP::setGoal(char ch)
     joint_angle.push_back(-0.01);
     setToolControl(joint_angle);
   }
+  else if(ch == 'b' || ch == 'B')
+  {
+    printf("input : b \tincrease(++) gripper distance\n");
+    std::vector<double> joint_angle;
+    joint_angle.push_back(0.02);
+    setToolControlToPresent(joint_angle);
+  }
+  else if(ch == 'v' || ch == 'V')
+  {
+    printf("input : v \tdecrease(--) gripper distance\n");
+    std::vector<double> joint_angle;
+    joint_angle.push_back(-0.02);
+    setToolControlToPresent(joint_angle);
+  }
 
+  else if(ch == 't' || ch == 'T')
+  {
+    printf("input : t \ttoggle torque\n");
+    toggleTorque();
+  }
 
   else if(ch == '2')
   {
